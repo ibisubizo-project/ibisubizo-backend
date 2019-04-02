@@ -8,6 +8,13 @@ import (
 	"github.com/globalsign/mgo"
 )
 
+const (
+	DATABASE           = "problemApp"
+	USERCOLLECTION     = "users"
+	COMMENTSCOLLECTION = "comments"
+	PROBLEMSCOLLECTION = "problems"
+)
+
 var (
 	_, b, _, _ = runtime.Caller(0)
 	basepath   = filepath.Dir(b)

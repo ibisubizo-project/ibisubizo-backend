@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/ofonimefrancis/problemsApp/config"
+	"github.com/ofonimefrancis/problemsApp/features/users"
 )
 
 func main() {
@@ -36,6 +37,8 @@ func main() {
 		MaxAge:           300,
 	})
 	r.Use(cors.Handler)
+
+	r.Mount("/api/auth", users.AuthRoutes())
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		route = strings.Replace(route, "/*/", "/", -1)
