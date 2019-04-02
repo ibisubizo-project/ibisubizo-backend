@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -42,5 +46,22 @@ func main() {
 	if err := chi.Walk(r, walkFunc); err != nil {
 		fmt.Printf("Logging err: %s\n", err.Error())
 	}
+
+	log.Printf("Now starting server on port %s", config.Get().Port)
+
+	PORT := fmt.Sprintf(":%s", config.Get().Port)
+
+	//TODO: Handle Graceful shutdown
+	//Block that handles server interrupts
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		<-c
+		log.Println("Stopping server...")
+		os.Exit(1)
+	}()
+
+	log.Println(http.ListenAndServe(PORT, r))
 
 }
