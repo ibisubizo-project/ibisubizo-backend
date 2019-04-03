@@ -11,10 +11,17 @@ import (
 	"github.com/ofonimefrancis/problemsApp/features/users"
 )
 
+//MessageResponse - MessageResponse
 type MessageResponse struct {
 	Message string `json:"error"`
 }
 
+//ApproveRequest - ApproveRequest
+type ApproveRequest struct {
+	ProblemID string `json:"id"`
+}
+
+//AddProblem - AddProblem
 func AddProblem(w http.ResponseWriter, r *http.Request) {
 	var problem Problem
 
@@ -44,6 +51,7 @@ func AddProblem(w http.ResponseWriter, r *http.Request) {
 
 	problem.ID = bson.NewObjectId()
 	problem.CreatedAt = time.Now()
+	problem.IsResolved = false
 
 	if err := Create(problem); err != nil {
 		log.Println(err)
@@ -58,6 +66,7 @@ func AddProblem(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//GetApprovedPosts - GetApprovedPosts
 func GetApprovedPosts(w http.ResponseWriter, r *http.Request) {
 	problems, err := ListAllApprovedListings()
 	if err != nil {
@@ -75,6 +84,7 @@ func GetApprovedPosts(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, problems)
 }
 
+//GetAllListings - GetAllListings
 func GetAllListings(w http.ResponseWriter, r *http.Request) {
 	problems, err := ListAll()
 	if err != nil {
@@ -92,24 +102,22 @@ func GetAllListings(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, problems)
 }
 
-type ApproveRequest struct {
-	ProblemID string `json:"id"`
-}
-
+//ApprovePost - ApprovePost
 func ApprovePost(w http.ResponseWriter, r *http.Request) {
 	var request ApproveRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		log.Println(err)
+		log.Println("[ApprovePost] Error decoding payload")
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, MessageResponse{Message: "Error decoding payload"})
+		render.JSON(w, r, MessageResponse{Message: "Invalid payload"})
 		return
 	}
 
 	//Check if a problem with the ID Exists
 	if !ProblemExists(request.ProblemID) {
-		log.Println("There is no post with the specified ID")
+		log.Println("[ApprovePost] There is no post with the specified ID")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "There is no post with the specified ID"})
 		return
@@ -117,7 +125,7 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 
 	problem, err := GetByID(request.ProblemID)
 	if err != nil {
-		log.Println("Error retrieving post")
+		log.Println("[ApprovePost] Error retrieving post")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Error retrieving post"})
 		return
@@ -127,7 +135,7 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 	err = Update(request.ProblemID, problem)
 	if err != nil {
 		log.Println(err)
-		log.Println("Error Approving post")
+		log.Println("[ApprovePost] Error Approving post")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Error approving post"})
 		return
@@ -135,4 +143,47 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, problem)
 
+}
+
+//ResolveProblem - ResolveProblem
+func ResolveProblem(w http.ResponseWriter, r *http.Request) {
+	var request ApproveRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Println(err)
+		log.Println("[ResolveProblem] Error decoding payload")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Invalid payload"})
+		return
+	}
+
+	//Check if a problem with the ID Exists
+	if !ProblemExists(request.ProblemID) {
+		log.Println("[ResolveProblem] There is no post with the specified ID")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "There is no post with the specified ID"})
+		return
+	}
+
+	problem, err := GetByID(request.ProblemID)
+	if err != nil {
+		log.Println(err)
+		log.Println("[ResolveProblem] Error retrieving problem with the specified ID")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error retrieving problem"})
+		return
+	}
+
+	problem.IsResolved = true
+	err = Update(request.ProblemID, problem)
+	if err != nil {
+		log.Println(err)
+		log.Println("[ResolveProblem] Error Approving post")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error approving post"})
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, MessageResponse{Message: "Problem resolved"})
 }

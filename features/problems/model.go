@@ -15,7 +15,8 @@ type Problem struct {
 	Videos     []string      `json:"videos"`
 	Document   []string      `json:"documents"`
 	IsApproved bool          `json:"is_approved"` //Is the post approved by an admin or not?
-	Status     int           `json:"status"`      //0-Public 1-Private
+	IsResolved bool          `json:"is_resolved,omitempty"`
+	Status     int           `json:"status"` //0-Public 1-Private
 	CreatedBy  string        `json:"created_by"`
 	CreatedAt  time.Time     `json:"created_at"`
 	UpdatedAt  time.Time     `json:"updated_at"`
