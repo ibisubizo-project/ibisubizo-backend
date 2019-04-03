@@ -17,8 +17,8 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-//LoginSuccessResponse - LoginSuccessResponse
-type LoginSuccessResponse struct {
+//SuccessResponse - LoginSuccessResponse
+type SuccessResponse struct {
 	User        Users  `json:"user"`
 	TokenString string `json:"token"`
 }
@@ -50,6 +50,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.Password = "" //Dont disclose user password
 	user.HashedPassword = passwordHash.Hash
 	user.Salt = passwordHash.Salt
 
@@ -68,8 +69,22 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, tokenString, err := config.GetTokenAuth().Encode(jwt.MapClaims{
+		"id":        user.ID,
+		"isAdmin":   user.IsAdmin,
+		"firstname": user.FirstName,
+		"lastname":  user.LastName,
+		"phone":     user.PhoneNumber,
+	})
+	if err != nil {
+		log.Println("[RegisterUser] Error encoding jwt payload")
+		render.Status(r, http.StatusInternalServerError)
+		render.JSON(w, r, ErrorResponse{Error: "Error encoding jwt payload"})
+		return
+	}
+
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, user)
+	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
 }
 
 //LoginObject - LoginObject
@@ -131,5 +146,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, LoginSuccessResponse{User: user, TokenString: tokenString})
+	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
 }

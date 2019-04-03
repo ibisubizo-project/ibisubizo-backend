@@ -10,7 +10,7 @@ import (
 
 //Users - Represents a user in the system
 type Users struct {
-	ID             bson.ObjectId `json:"id"`
+	ID             bson.ObjectId `json:"_id,omitempty"`
 	FirstName      string        `json:"firstname"`
 	MiddleName     string        `json:"middlename"`
 	LastName       string        `json:"lastname"`
@@ -25,11 +25,11 @@ type Users struct {
 
 //Exists - Returns true if a user with a phone number exists
 func (user Users) Exists() bool {
-	session := config.Get().Session
+	session := config.Get().Session.Clone()
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
-	err := collection.Find(bson.M{"phone": user.PhoneNumber})
+	err := collection.Find(bson.M{"phonenumber": user.PhoneNumber}).One(&user)
 	if err != nil {
 		return false
 	}
@@ -37,20 +37,34 @@ func (user Users) Exists() bool {
 }
 
 func UserExists(phoneNumber string) bool {
-	session := config.Get().Session
+	var user Users
+	session := config.Get().Session.Clone()
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
-	err := collection.Find(bson.M{"phone": phoneNumber})
+	err := collection.Find(bson.M{"phonenumber": phoneNumber}).One(&user)
 	if err != nil {
 		return false
 	}
 	return true
 }
 
+func UserWithIDExists(id string) error {
+	var user Users
+	session := config.Get().Session.Clone()
+	defer session.Close()
+
+	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
+	err := collection.Find(bson.M{"id": bson.ObjectIdHex(id)}).One(&user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 //Create User
 func Create(user Users) error {
-	session := config.Get().Session
+	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
 	return collection.Insert(user)
@@ -58,16 +72,16 @@ func Create(user Users) error {
 
 func Read(phoneNumber string) (Users, error) {
 	var user Users
-	session := config.Get().Session
+	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
-	err := collection.Find(bson.M{"phone": phoneNumber}).One(&user)
+	err := collection.Find(bson.M{"phonenumber": phoneNumber}).One(&user)
 	return user, err
 }
 
 func ReadAll() ([]Users, error) {
 	var users []Users
-	session := config.Get().Session
+	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
 	err := collection.Find(bson.M{}).All(&users)
@@ -75,7 +89,7 @@ func ReadAll() ([]Users, error) {
 }
 
 func Update(oldUser, newUser interface{}) error {
-	session := config.Get().Session
+	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
 	return collection.Update(oldUser, newUser)
@@ -85,8 +99,8 @@ func Delete(id string) error {
 	if !bson.IsObjectIdHex(id) {
 		return errors.New("Invalid Object ID")
 	}
-	session := config.Get().Session
+	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
-	return collection.Remove(bson.M{"_id": id})
+	return collection.Remove(bson.M{"id": bson.ObjectIdHex(id)})
 }
