@@ -36,7 +36,7 @@ func ListAll() ([]Problem, error) {
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	err := collection.Find(nil).All(&problems)
+	err := collection.Find(nil).Sort("-createdat").All(&problems)
 	return problems, err
 }
 
