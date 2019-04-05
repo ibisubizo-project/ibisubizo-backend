@@ -5,7 +5,6 @@ import configureStore from '../redux/store/configureStore';
 import { initialState } from '../redux/reducers';
 import { Router, Route } from 'react-router-dom';
 
-import createHistory from 'history/createBrowserHistory';
 
 export default class Root extends Component {
   render() {
