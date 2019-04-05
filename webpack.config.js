@@ -37,9 +37,13 @@ module.exports = {
     },
     plugins:[
         new webpack.HotModuleReplacementPlugin(),
-        new ExtractTextPlugin('style.bundle.css')
+        new ExtractTextPlugin('style.bundle.css'),
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify('production')
+        })
     ],
     devServer: {
+        historyApiFallback: true,
         contentBase: './dist',
         hot: true
     }

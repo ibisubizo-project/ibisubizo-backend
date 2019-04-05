@@ -1,13 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-export default class Hello extends React.Component {
-    render() {
-        return (<p>Hello From the other side</p>)
-    }
-}
+import '../public/index.css';
+
+import Root from './containers/Root'
 
 
 ReactDOM.render(
-    <div><Hello /></div>, document.getElementById("app")
+    <div><Root  /></div>, document.getElementById("app")
 )
