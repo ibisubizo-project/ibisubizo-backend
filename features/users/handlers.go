@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-chi/render"
@@ -147,4 +149,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
+}
+
+//FetchUserByID - FetchUserByID
+func FetchUserByID(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "user_id")
+
+	if len(userID) == 0 {
+		log.Println("Invalid User ID")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid User ID"})
+		return
+	}
+
+	user, err := GetUserById(userID)
+	if err != nil {
+		log.Println("[FetchUserById] Error retrieving user by ID")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Error retrieving user with specified ID"})
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, user)
 }

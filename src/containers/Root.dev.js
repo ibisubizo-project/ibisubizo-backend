@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import Main from '../index';
+import {Router, Route, IndexRoute} from 'react-router-dom';
 import DevTools from './DevTools';
 import configureStore from '../redux/store/configureStore';
 import { initialState } from '../redux/reducers';
+import Main from './Main';
 
 export default class Root extends Component {
   render() {
@@ -11,10 +12,10 @@ export default class Root extends Component {
 
     return (
       <Provider store={store}>
-        <div>
-            <h1>Hello World...</h1>
-          <DevTools />
-        </div>
+        <Router>
+          <Route path="/" component={Main} />
+        </Router>
+        <DevTools />
       </Provider>
     );
   }

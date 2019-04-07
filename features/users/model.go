@@ -79,6 +79,17 @@ func Read(phoneNumber string) (Users, error) {
 	return user, err
 }
 
+//GetUserById - GetUserById
+func GetUserById(id string) (Users, error) {
+	var user Users
+	session := config.Get().Session.Clone()
+	defer session.Close()
+	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
+	err := collection.Find(bson.M{"id": bson.ObjectIdHex(id)}).One(&user)
+	return user, err
+}
+
+//ReadAll - ReadAll
 func ReadAll() ([]Users, error) {
 	var users []Users
 	session := config.Get().Session.Clone()
@@ -88,6 +99,7 @@ func ReadAll() ([]Users, error) {
 	return users, err
 }
 
+//Update - Update
 func Update(oldUser, newUser interface{}) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()

@@ -43,6 +43,7 @@ func main() {
 	r.Mount("/api/auth", users.AuthRoutes())
 	r.Mount("/api/problems", problems.Routes())
 	r.Mount("/api/comments", comments.Routes())
+	r.Mount("/api/users", users.UserRoutes())
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		route = strings.Replace(route, "/*/", "/", -1)
