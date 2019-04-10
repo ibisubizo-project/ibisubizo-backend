@@ -11,6 +11,9 @@ let api = {
     },
     GetUserById: (user_id) => {
         return axios.get(`${API_URL}/users/id/${user_id}`)
+    },
+    GetProblemListing: () => {
+        return axios.get(`${API_URL}/problems`, {headers: {'Accept': 'application/json'}})
     }
 }
 

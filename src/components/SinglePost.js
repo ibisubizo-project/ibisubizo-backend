@@ -4,13 +4,13 @@ import React from 'react';
 const SinglePost = () => {
     return (
         <div className="flex border-b border-solid border-grey-light">
-            <div className="w-7/8 p-3 pl-0">
+            <div className="w-10/10 p-3 pl-0">
                 <div className="flex justify-between">
                     <div>
                         <span className="font-bold"><a href="#" className="text-black">Ofonime Francis</a></span>
                         <span className="text-grey-dark">7 Apr 2019</span>
                     </div>
-            
+                    
                     <div>
                         <a href="#" className="text-grey-dark hover:text-teal"><i className="fa fa-chevron-down"></i></a>
                     </div>
