@@ -11,6 +11,7 @@ const (
 	RegisterRoute = "/register"
 	LoginRoute    = "/login"
 	UserRoute     = "/{user_id}"
+	AllUsersRoute = "/"
 )
 
 //Routes -  All the user specific routes
@@ -33,7 +34,7 @@ func AuthRoutes() *chi.Mux {
 //UserRoutes - UserRoutes
 func UserRoutes() *chi.Mux {
 	router := chi.NewMux()
-
+	router.Get(AllUsersRoute, RetrieveAllUsers)
 	router.Get(UserRoute, FetchUserByID)
 
 	return router

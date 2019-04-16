@@ -174,3 +174,17 @@ func FetchUserByID(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, user)
 }
+
+func RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := ReadAll()
+	if err != nil {
+		log.Println("[RetrieveAllUsers] Error retrieving all users")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something bad happened"})
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, users)
+}
