@@ -11,7 +11,7 @@ type Comment struct {
 	ID          bson.ObjectId `json:"_id,omitempty"`
 	PostID      bson.ObjectId `json:"post_id"`
 	UserID      bson.ObjectId `json:"user_id"`
-	Text        string        `json:"comment"`
+	Comment     string        `json:"comment"`
 	Images      []string      `json:"images,omitempty"`
 	CommentedAt time.Time     `json:"commented_at"`
 }

@@ -73,8 +73,8 @@ func GetByID(id string) (Problem, error) {
 	return problem, err
 }
 
-//List Problems By a particular user
-func GetUserListings(userID bson.ObjectId) ([]Problem, error) {
+//GetUserListings - List Problems By a particular user
+func GetUserListings(userID string) ([]Problem, error) {
 	session := config.Get().Session.Clone()
 	defer session.Close()
 	var problems []Problem

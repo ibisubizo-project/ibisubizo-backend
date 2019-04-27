@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/globalsign/mgo/bson"
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/ofonimefrancis/problemsApp/features/users"
 )
@@ -186,4 +187,57 @@ func ResolveProblem(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, MessageResponse{Message: "Problem resolved"})
+}
+
+//GetUserProblems - GetUserProblems
+func GetUserProblems(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "user_id")
+	problems, err := GetUserListings(userID)
+	if err != nil {
+		log.Println(err)
+		log.Println("[GetUserProblems] Error Retrieving users problem")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Something went wrong..."})
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, problems)
+}
+
+func GetProblem(w http.ResponseWriter, r *http.Request) {
+	problemID := chi.URLParam(r, "problem_id")
+
+	ok := ProblemExists(problemID)
+	if !ok {
+		log.Println("Problem with that ID doesn't exists")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Invalid Problem ID"})
+		return
+	}
+	problem, err := GetByID(problemID)
+	if err != nil {
+		log.Println("Error retrieving problem")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error retrieving problem"})
+		return
+	}
+
+	// var result ProblemDetail
+
+	// allComments, err := comments.GetCommentsForProblem(problem.ID)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	log.Println("Error retrieving comments")
+	// 	render.Status(r, http.StatusBadRequest)
+	// 	render.JSON(w, r, MessageResponse{Message: "Error retrieving comments"})
+	// 	return
+	// }
+
+	// result.Problem = problem
+	// result.Comments = allComments
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, problem)
 }

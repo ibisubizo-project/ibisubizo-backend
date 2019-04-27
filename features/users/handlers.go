@@ -30,7 +30,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var user Users
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		log.Println(err)
+		log.Println()
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, ErrorResponse{Error: "Something is not right..."})
 		return
@@ -48,7 +48,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		log.Println("[RegisterUser] Error creating password hash")
 		log.Println(err)
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ErrorResponse{Error: "Error generating password hash"})
+		render.JSON(w, r, ErrorResponse{Error: err.Error()})
 		return
 	}
 

@@ -16,7 +16,8 @@ import (
 
 //MessageResponse - MessageResponse
 type MessageResponse struct {
-	Message string `json:"error"`
+	Message string  `json:"message"`
+	Comment Comment `json:"comment,omitempty"`
 }
 
 //GetCommentsForPost - GetCommentsForPost
@@ -73,6 +74,6 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, MessageResponse{Message: "Comment added"})
+	render.JSON(w, r, MessageResponse{Message: "Comment added", Comment: comment})
 
 }
