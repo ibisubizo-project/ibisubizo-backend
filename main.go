@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/ofonimefrancis/problemsApp/config"
 	"github.com/ofonimefrancis/problemsApp/features/comments"
+	"github.com/ofonimefrancis/problemsApp/features/likes"
 	"github.com/ofonimefrancis/problemsApp/features/problems"
 	"github.com/ofonimefrancis/problemsApp/features/users"
 )
@@ -44,6 +45,7 @@ func main() {
 	r.Mount("/api/problems", problems.Routes())
 	r.Mount("/api/comments", comments.Routes())
 	r.Mount("/api/users", users.UserRoutes())
+	r.Mount("/api/likes", likes.Routes())
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		route = strings.Replace(route, "/*/", "/", -1)
@@ -69,7 +71,5 @@ func main() {
 		log.Println("Stopping server...")
 		os.Exit(1)
 	}()
-
 	log.Println(http.ListenAndServe(PORT, r))
-
 }

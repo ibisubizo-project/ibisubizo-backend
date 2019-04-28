@@ -13,6 +13,7 @@ const (
 	USERCOLLECTION     = "users"
 	COMMENTSCOLLECTION = "comments"
 	PROBLEMSCOLLECTION = "problems"
+	LIKESCOLLECTION    = "likes"
 )
 
 var (
