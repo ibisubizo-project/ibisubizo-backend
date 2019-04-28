@@ -2,7 +2,11 @@ package likes
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/go-chi/chi"
 
 	"github.com/ofonimefrancis/problemsApp/features/problems"
 
@@ -15,9 +19,15 @@ type MessageResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
+type GenericPayload struct {
+	ProblemID string `json:"problem_id,omitempty"`
+	CommentID string `json:"comment_id,omitempty"`
+	LikedBy   string `json:"liked_by"`
+}
+
 //AddLikeToComment - AddLikeToComment
 func AddLikeToComment(w http.ResponseWriter, r *http.Request) {
-	var request Likes
+	var request CommentLikes
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
@@ -25,9 +35,9 @@ func AddLikeToComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.ID = bson.NewObjectId()
-	request.ProblemID = ""
+	request.LikedOn = time.Now()
 
-	if err := AddLike(request); err != nil {
+	if err := AddCommentLike(request); err != nil {
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Error occurred while adding like"})
 		return
@@ -39,17 +49,22 @@ func AddLikeToComment(w http.ResponseWriter, r *http.Request) {
 
 //AddLikeToProblem - AddLikeToProblem
 func AddLikeToProblem(w http.ResponseWriter, r *http.Request) {
-	var request Likes
+	var request GenericPayload
+	var like ProblemLikes
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		log.Println(err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, "Invalid Payload")
 		return
 	}
-	request.ID = bson.NewObjectId()
-	request.CommentID = ""
+	like.ID = bson.NewObjectId()
+	like.ProblemID = bson.ObjectIdHex(request.ProblemID)
+	like.LikedBy = bson.ObjectIdHex(request.LikedBy)
+	like.LikedOn = time.Now()
 
-	if err := AddLike(request); err != nil {
+	if err := AddProblemLike(like); err != nil {
+		log.Println(err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Error occurred while adding like"})
 		return
@@ -114,4 +129,32 @@ func DeleteLikeFromProblem(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, MessageResponse{Message: "Like Removed"})
+}
+
+//GetLikesForProblem - GetLikesForProblem
+func GetLikesForProblem(w http.ResponseWriter, r *http.Request) {
+	problemID := chi.URLParam(r, "problem_id")
+	if !bson.IsObjectIdHex(problemID) {
+		log.Println("Invalid bson hex object")
+		return
+	}
+
+	if !problems.ProblemExists(problemID) {
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Invalid Problem ID"})
+		return
+	}
+
+	likes, err := GetAllLikesForProblem(problemID)
+	if err != nil {
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error retrieving likes for post"})
+		return
+	}
+	if len(likes) == 0 {
+		likes = []ProblemLikes{}
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, likes)
 }

@@ -5,50 +5,65 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/ofonimefrancis/problemsApp/config"
-	"github.com/ofonimefrancis/problemsApp/features/users"
 )
 
-type Likes struct {
+type ProblemLikes struct {
 	ID        bson.ObjectId `json:"id"`
 	ProblemID bson.ObjectId `json:"problem_id,omitempty"`
+	//CommentID bson.ObjectId `json:"commend_id,omitempty"`
+	LikedBy bson.ObjectId `json:"liked_by"`
+	LikedOn time.Time     `json:"liked_on"`
+}
+
+type CommentLikes struct {
+	ID bson.ObjectId `json:"id"`
+	//ProblemID bson.ObjectId `json:"problem_id,omitempty"`
 	CommentID bson.ObjectId `json:"commend_id,omitempty"`
-	LikedBy   users.Users   `json:"liked_by"`
+	LikedBy   bson.ObjectId `json:"liked_by"`
 	LikedOn   time.Time     `json:"liked_on"`
 }
 
 //AddLike - AddLike
-func AddLike(like Likes) error {
+func AddProblemLike(like ProblemLikes) error {
 	session := config.Get().Session.Copy()
 	defer session.Close()
 
-	collection := session.DB(config.DATABASE).C(config.LIKESCOLLECTION)
+	collection := session.DB(config.DATABASE).C(config.PROBLEMLIKESCOLLECTION)
+	return collection.Insert(like)
+}
+
+func AddCommentLike(like CommentLikes) error {
+	session := config.Get().Session.Copy()
+	defer session.Close()
+
+	collection := session.DB(config.DATABASE).C(config.COMMENTLIKESCOLLECTION)
 	return collection.Insert(like)
 }
 
 //GetAllLikesForProblem - GetAllLikesForProblem
-func GetAllLikesForProblem(problemID string) ([]Likes, error) {
+func GetAllLikesForProblem(problemID string) ([]ProblemLikes, error) {
 	session := config.Get().Session.Copy()
 	defer session.Close()
-	var likes []Likes
+	var likes []ProblemLikes
 
-	collection := session.DB(config.DATABASE).C(config.LIKESCOLLECTION)
+	collection := session.DB(config.DATABASE).C(config.PROBLEMLIKESCOLLECTION)
 	err := collection.Find(bson.M{"problemid": bson.ObjectIdHex(problemID)}).All(&likes)
 	if err != nil {
-		return []Likes{}, err
+		return []ProblemLikes{}, err
 	}
 	return likes, nil
 }
 
 //GetAllLikesForComment - GetAllLikesForComment
-func GetAllLikesForComment(commentID string) ([]Likes, error) {
+func GetAllLikesForComment(commentID string) ([]CommentLikes, error) {
 	session := config.Get().Session.Copy()
 	defer session.Close()
-	var likes []Likes
+	var likes []CommentLikes
 
-	collection := session.DB(config.DATABASE).C(config.LIKESCOLLECTION)
+	collection := session.DB(config.DATABASE).C(config.COMMENTLIKESCOLLECTION)
 	err := collection.Find(bson.M{"commentid": bson.ObjectIdHex(commentID)}).All(&likes)
 	if err != nil {
-		return []Likes{}, err
+		return []CommentLikes{}, err
 	}
 	return likes, nil
 }
@@ -58,7 +73,7 @@ func DeleteLikeForComment(likeID, commentID string) error {
 	session := config.Get().Session.Copy()
 	defer session.Close()
 
-	collection := session.DB(config.DATABASE).C(config.LIKESCOLLECTION)
+	collection := session.DB(config.DATABASE).C(config.COMMENTLIKESCOLLECTION)
 	return collection.Remove(bson.M{"id": bson.ObjectIdHex(likeID), "commentid": bson.ObjectIdHex(commentID)})
 
 }
@@ -68,6 +83,6 @@ func DeleteLikeForProblen(likeID, problemID string) error {
 	session := config.Get().Session.Copy()
 	defer session.Close()
 
-	collection := session.DB(config.DATABASE).C(config.LIKESCOLLECTION)
+	collection := session.DB(config.DATABASE).C(config.PROBLEMLIKESCOLLECTION)
 	return collection.Remove(bson.M{"id": bson.ObjectIdHex(likeID), "problemid": bson.ObjectIdHex(problemID)})
 }

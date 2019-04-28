@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	DATABASE           = "problemApp"
-	USERCOLLECTION     = "users"
-	COMMENTSCOLLECTION = "comments"
-	PROBLEMSCOLLECTION = "problems"
-	LIKESCOLLECTION    = "likes"
+	DATABASE               = "problemApp"
+	USERCOLLECTION         = "users"
+	COMMENTSCOLLECTION     = "comments"
+	PROBLEMSCOLLECTION     = "problems"
+	COMMENTLIKESCOLLECTION = "commentlikes"
+	PROBLEMLIKESCOLLECTION = "problemlikes"
 )
 
 var (
