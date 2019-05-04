@@ -15,6 +15,7 @@ const (
 	PROBLEMSCOLLECTION     = "problems"
 	COMMENTLIKESCOLLECTION = "commentlikes"
 	PROBLEMLIKESCOLLECTION = "problemlikes"
+	LIMITS                 = 20
 )
 
 var (

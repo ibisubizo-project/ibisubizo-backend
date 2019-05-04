@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
@@ -69,7 +70,19 @@ func AddProblem(w http.ResponseWriter, r *http.Request) {
 
 //GetApprovedPosts - GetApprovedPosts
 func GetApprovedPosts(w http.ResponseWriter, r *http.Request) {
-	problems, err := ListAllApprovedListings()
+	pageStr := r.URL.Query().Get("page")
+	page := 1
+	var err error
+
+	if pageStr == "" {
+		page = 1
+	} else {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			page = 1
+		}
+	}
+	problems, err := ListAllApprovedListings(page)
 	if err != nil {
 		log.Println("[GetApprovedPosts] Error retrieving approved listings")
 		log.Println(err)
@@ -87,7 +100,20 @@ func GetApprovedPosts(w http.ResponseWriter, r *http.Request) {
 
 //GetAllListings - GetAllListings
 func GetAllListings(w http.ResponseWriter, r *http.Request) {
-	problems, err := ListAll()
+	pageStr := r.URL.Query().Get("page")
+	page := 1
+	var err error
+
+	if pageStr == "" {
+		page = 1
+	} else {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			page = 1
+		}
+	}
+
+	problems, err := ListAll(page)
 	if err != nil {
 		log.Println("[GetAllListings] Error retrieving approved listings")
 		log.Println(err)
@@ -192,7 +218,19 @@ func ResolveProblem(w http.ResponseWriter, r *http.Request) {
 //GetUserProblems - GetUserProblems
 func GetUserProblems(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "user_id")
-	problems, err := GetUserListings(userID)
+	pageStr := r.URL.Query().Get("page")
+	page := 1
+	var err error
+
+	if pageStr == "" {
+		page = 1
+	} else {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			page = 1
+		}
+	}
+	problems, err := GetUserListings(userID, page)
 	if err != nil {
 		log.Println(err)
 		log.Println("[GetUserProblems] Error Retrieving users problem")

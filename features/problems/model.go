@@ -31,24 +31,38 @@ func Create(problem Problem) error {
 }
 
 //List Problems
-func ListAll() ([]Problem, error) {
+func ListAll(page int) ([]Problem, error) {
 	var problems []Problem
 	session := config.Get().Session.Clone()
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	err := collection.Find(nil).Sort("-createdat").All(&problems)
+	var err error
+
+	if page != 0 {
+		err = collection.Find(nil).Sort("-createdat").Skip((page - 1) * config.LIMITS).Limit(config.LIMITS).All(&problems)
+	} else {
+		err = collection.Find(nil).Sort("-createdat").All(&problems)
+	}
+
 	return problems, err
 }
 
 //ListAllApprovedListings - Lists only approved problems, meaning it can be shown to the general public if status is public
-func ListAllApprovedListings() ([]Problem, error) {
+func ListAllApprovedListings(page int) ([]Problem, error) {
 	var problems []Problem
 	session := config.Get().Session.Clone()
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	err := collection.Find(bson.M{"isapproved": true, "status": 0}).Sort("-createdat").All(&problems)
+	var err error
+
+	if page != 0 {
+		err = collection.Find(bson.M{"isapproved": true, "status": 0}).Sort("-createdat").Skip((page - 1) * config.LIMITS).Limit(config.LIMITS).All(&problems)
+	} else {
+		err = collection.Find(bson.M{"isapproved": true, "status": 0}).Sort("-createdat").All(&problems)
+	}
+
 	return problems, err
 }
 
@@ -74,13 +88,18 @@ func GetByID(id string) (Problem, error) {
 }
 
 //GetUserListings - List Problems By a particular user
-func GetUserListings(userID string) ([]Problem, error) {
+func GetUserListings(userID string, page int) ([]Problem, error) {
 	session := config.Get().Session.Clone()
 	defer session.Close()
 	var problems []Problem
+	var err error
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	err := collection.Find(bson.M{"createdby": userID}).All(&problems)
+	if page != 0 {
+		err = collection.Find(bson.M{"createdby": userID}).Sort("-createdat").Skip((page - 1) * config.LIMITS).Limit(config.LIMITS).All(&problems)
+	} else {
+		err = collection.Find(bson.M{"createdby": userID}).Sort("-createdat").All(&problems)
+	}
 	return problems, err
 }
 
