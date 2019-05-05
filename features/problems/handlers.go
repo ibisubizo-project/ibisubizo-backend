@@ -68,6 +68,23 @@ func AddProblem(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//GetAllResolvedPosts - Get all Resolved problems
+func GetAllResolvedPosts(w http.ResponseWriter, r *http.Request) {
+	problems, err := ListAllResolvedProblems(0)
+	if err != nil {
+		log.Println(err)
+		log.Println("[GetAllResolvedPosts] Error retrieving resolved problems")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error retrieving resolved problems"})
+		return
+	}
+	if len(problems) == 0 {
+		problems = []Problem{}
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, problems)
+}
+
 //GetApprovedPosts - GetApprovedPosts
 func GetApprovedPosts(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
