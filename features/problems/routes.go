@@ -11,6 +11,7 @@ func Routes() *chi.Mux {
 	router.Get("/", GetAllListings)
 	router.Get("/approved", GetApprovedPosts)
 	router.Get("/resolved", GetAllResolvedPosts)
+	router.Get("/unresolved", GetAllUnResolvedPosts)
 	router.Post("/approve", ApprovePost)
 	router.Post("/resolve", ResolveProblem)
 	router.Get("/user/{user_id}", GetUserProblems)
