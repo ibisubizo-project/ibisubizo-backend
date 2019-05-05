@@ -31,7 +31,7 @@ func Create(problem Problem) error {
 }
 
 //List Problems
-func ListAll(page int) ([]Problem, error) {
+func 	ListAll(page int) ([]Problem, error) {
 	var problems []Problem
 	session := config.Get().Session.Clone()
 	defer session.Close()

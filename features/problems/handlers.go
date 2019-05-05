@@ -139,7 +139,7 @@ func GetAllListings(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if pageStr == "" {
-		page = 1
+		page = 0
 	} else {
 		page, err = strconv.Atoi(pageStr)
 		if err != nil {
