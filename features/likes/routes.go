@@ -13,6 +13,7 @@ func Routes() *chi.Mux {
 	router.Get("/{problem_id}", GetLikesForProblem)
 	router.Delete("/remove/from/comment", DeleteLikeFromComment)
 	router.Delete("/remove/from/problem", DeleteLikeFromProblem)
+	router.Delete("/remove/{problem_id}/{liked_by}", RemoveLikeFromProblem)
 
 	return router
 }

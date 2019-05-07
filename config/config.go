@@ -15,7 +15,7 @@ const (
 	PROBLEMSCOLLECTION     = "problems"
 	COMMENTLIKESCOLLECTION = "commentlikes"
 	PROBLEMLIKESCOLLECTION = "problemlikes"
-	LIMITS                 = 20
+	LIMITS                 = 6
 )
 
 var (
@@ -36,17 +36,6 @@ type Config struct {
 func Init() {
 
 	config = Config{}
-	//Read in configuration from a file
-	// configFile, err := ioutil.ReadFile("../config.json")
-	// if err != nil {
-	// 	log.Println(err)
-	// 	log.Panic("There was an error loading the config file")
-	// }
-
-	// if err := json.Unmarshal(configFile, config); err != nil {
-	// 	log.Panic("Error decoding into struct. Please check the config file")
-	// }
-
 	config.Port = "8000"
 
 	session, err := mgo.DialWithInfo(&mgo.DialInfo{

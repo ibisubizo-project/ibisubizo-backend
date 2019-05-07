@@ -76,9 +76,10 @@ func AddLikeToProblem(w http.ResponseWriter, r *http.Request) {
 
 //Payload - Request Payload
 type Payload struct {
-	ID        string `json:"id"`
-	CommentID string `json:"comment_id"`
+	ID        string `json:"id,omitempty"`
+	CommentID string `json:"comment_id,omitempty"`
 	ProblemID string `json:"problem_id"`
+	LikedBy   string `json:"liked_by"`
 }
 
 //DeleteLikeFromComment - DeleteLikeFromComment
@@ -116,12 +117,15 @@ func DeleteLikeFromProblem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !problems.ProblemExists(like.ProblemID) {
+		log.Println("Invalid Problem ID")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Invalid Problem ID"})
 		return
 	}
 
-	if err := DeleteLikeForProblen(like.ID, like.ProblemID); err != nil {
+	if err := DeleteLikeForProblem(like.ProblemID, like.LikedBy); err != nil {
+		log.Println("[DeleteLikeForProblem]")
+		log.Println(err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Error removing like for problem"})
 		return
@@ -129,6 +133,33 @@ func DeleteLikeFromProblem(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, MessageResponse{Message: "Like Removed"})
+}
+
+//RemoveLikeFromProblem - RemoveLikeFromProblem
+func RemoveLikeFromProblem(w http.ResponseWriter, r *http.Request) {
+	problemID := chi.URLParam(r, "problem_id")
+	likedBy := chi.URLParam(r, "liked_by")
+
+	if !bson.IsObjectIdHex(problemID) || !bson.IsObjectIdHex(likedBy) {
+		log.Println("Invalid bson hex object")
+		return
+	}
+
+	if !problems.ProblemExists(problemID) {
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Invalid Problem ID"})
+		return
+	}
+	if err := DeleteLikeForProblem(problemID, likedBy); err != nil {
+		log.Println("[DeleteLikeForProblem]")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error removing like for problem"})
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, MessageResponse{Message: "Like Removed"})
+
 }
 
 //GetLikesForProblem - GetLikesForProblem

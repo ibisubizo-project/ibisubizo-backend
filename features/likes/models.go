@@ -18,7 +18,7 @@ type ProblemLikes struct {
 type CommentLikes struct {
 	ID bson.ObjectId `json:"id"`
 	//ProblemID bson.ObjectId `json:"problem_id,omitempty"`
-	CommentID bson.ObjectId `json:"commend_id,omitempty"`
+	CommentID bson.ObjectId `json:"comment_id,omitempty"`
 	LikedBy   bson.ObjectId `json:"liked_by"`
 	LikedOn   time.Time     `json:"liked_on"`
 }
@@ -79,10 +79,10 @@ func DeleteLikeForComment(likeID, commentID string) error {
 }
 
 //DeleteLikeForProblen - DeleteLikeForProblen
-func DeleteLikeForProblen(likeID, problemID string) error {
+func DeleteLikeForProblem(problemID, likedBy string) error {
 	session := config.Get().Session.Copy()
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMLIKESCOLLECTION)
-	return collection.Remove(bson.M{"id": bson.ObjectIdHex(likeID), "problemid": bson.ObjectIdHex(problemID)})
+	return collection.Remove(bson.M{"likedby": bson.ObjectIdHex(likedBy), "problemid": bson.ObjectIdHex(problemID)})
 }
