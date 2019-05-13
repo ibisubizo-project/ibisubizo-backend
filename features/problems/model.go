@@ -101,6 +101,24 @@ func ListAllUnResolvedProblems(page int) ([]Problem, error) {
 	return problems, err
 }
 
+//ListAllUnApprovedProblems - ListAllUnApprovedProblems
+func ListAllUnApprovedProblems(page int) ([]Problem, error) {
+	var problems []Problem
+	session := config.Get().Session.Clone()
+	defer session.Close()
+
+	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
+	var err error
+
+	if page != 0 {
+		err = collection.Find(bson.M{"status": 0, "isapproved": false}).Sort("-createdat").Skip((page - 1) * config.LIMITS).Limit(config.LIMITS).All(&problems)
+	} else {
+		err = collection.Find(bson.M{"status": 0, "isapproved": false}).Sort("-createdat").All(&problems)
+	}
+
+	return problems, err
+}
+
 //GetByTitle - List Problems By title
 func GetByTitle(title string) (Problem, error) {
 	var problem Problem

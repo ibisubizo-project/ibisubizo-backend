@@ -206,6 +206,24 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func UnApprovedPost(w http.ResponseWriter, r *http.Request) {
+	unapprovedProblems, err := ListAllUnApprovedProblems(0)
+	if err != nil {
+		log.Println(err)
+		log.Println("[UnApprovedPost] Error Fetching Unapproved post")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Something went south"})
+		return
+	}
+
+	if len(unapprovedProblems) == 0 {
+		unapprovedProblems = []Problem{}
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, unapprovedProblems)
+}
+
 //ResolveProblem - ResolveProblem
 func ResolveProblem(w http.ResponseWriter, r *http.Request) {
 	var request ApproveRequest
