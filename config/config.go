@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -9,7 +11,7 @@ import (
 )
 
 const (
-	DATABASE               = "problemApp"
+	DATABASE               = "ibusizo"
 	USERCOLLECTION         = "users"
 	COMMENTSCOLLECTION     = "comments"
 	PROBLEMSCOLLECTION     = "problems"
@@ -34,16 +36,36 @@ type Config struct {
 
 //Init Initializes the configuration struct
 func Init() {
-
+	log.Println("[INIT]")
 	config = Config{}
-	config.Port = "8000"
+	port := os.Getenv("IBUSIBUZO_PORT")
+	if len(port) == 0 {
+		log.Println("len(port) != 0")
+		config.Port = "8000"
+	} else {
+		log.Println("[len(port) != 0] else")
+		fmt.Println(port)
+		config.Port = port
+	}
 
-	session, err := mgo.DialWithInfo(&mgo.DialInfo{
-		Addrs:    []string{"127.0.0.1:27017", "127.0.0.1:27018"},
-		Username: "",
-		Password: "",
-	})
+	databaseURL := os.Getenv("IBUSIBUZO_DATABASE_URL")
+	if len(databaseURL) == 0 {
+		log.Println("len(databaseURL) != 0")
+		config.MongoURL = "127.0.0.1:27017"
+	} else {
+		log.Println("[len(databaseURL) != 0] else")
+		config.MongoURL = databaseURL
+	}
+
+	session, err := mgo.Dial(config.MongoURL)
+	// session, err := mgo.DialWithInfo(&mgo.DialInfo{
+	// 	Addrs:    config.MongoURL,
+	// 	Username: "",
+	// 	Password: "",
+	// })
+
 	if err != nil {
+		log.Println(err)
 		log.Panic("Error connecting to database")
 	}
 	config.Session = session

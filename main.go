@@ -61,8 +61,6 @@ func main() {
 
 	PORT := fmt.Sprintf(":%s", config.Get().Port)
 
-	//TODO: Handle Graceful shutdown
-	//Block that handles server interrupts
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
