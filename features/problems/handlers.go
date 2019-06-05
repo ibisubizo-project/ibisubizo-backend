@@ -23,6 +23,55 @@ type ApproveRequest struct {
 	ProblemID string `json:"id"`
 }
 
+//UpdateMyPost - UpdateMyPost
+func UpdateMyPost(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "user_id")
+	problemID := chi.URLParam(r, "problem_id")
+	var requestBody Problem
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		log.Println("Invalid Payload")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Invalid Payload"})
+		return
+	}
+	_, err = GetUsersProblemByID(problemID, userID)
+	if err != nil {
+		log.Println("No problem with the specified ID and userID")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "No problem with the specified ID and userID"})
+		return
+	}
+	err = Update(problemID, requestBody)
+	if err != nil {
+		log.Println("Something went wrong while Updating Record")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Something went wrong while Updating Record"})
+		return
+	}
+	log.Println("Record Updated")
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, MessageResponse{Message: "Update Successful"})
+	return
+
+}
+
+//DeleteMyPost - DeleteMyPost
+func DeleteMyPost(w http.ResponseWriter, r *http.Request) {
+	problemID := chi.URLParam(r, "problem_id")
+	err := Remove(problemID)
+	if err != nil {
+		log.Println("Error removing problem")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Error Removing Problem."})
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, MessageResponse{Message: "Problem deleted successfully."})
+	return
+
+}
+
 //AddProblem - AddProblem
 func AddProblem(w http.ResponseWriter, r *http.Request) {
 	var problem Problem

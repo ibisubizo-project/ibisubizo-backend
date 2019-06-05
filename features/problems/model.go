@@ -31,7 +31,7 @@ func Create(problem Problem) error {
 }
 
 //List Problems
-func 	ListAll(page int) ([]Problem, error) {
+func ListAll(page int) ([]Problem, error) {
 	var problems []Problem
 	session := config.Get().Session.Clone()
 	defer session.Close()
@@ -83,6 +83,7 @@ func ListAllResolvedProblems(page int) ([]Problem, error) {
 
 	return problems, err
 }
+
 //ListAllUnResolvedProblems - ListAllUnResolvedProblems
 func ListAllUnResolvedProblems(page int) ([]Problem, error) {
 	var problems []Problem
@@ -130,7 +131,7 @@ func GetByTitle(title string) (Problem, error) {
 	return problem, err
 }
 
-//GetByID - GetByID 
+//GetByID - GetByID
 func GetByID(id string) (Problem, error) {
 	var problem Problem
 	session := config.Get().Session.Clone()
@@ -138,6 +139,17 @@ func GetByID(id string) (Problem, error) {
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
 	err := collection.Find(bson.M{"id": bson.ObjectIdHex(id)}).One(&problem)
+	return problem, err
+}
+
+//GetUsersProblemByID - GetUsersProblemByID
+func GetUsersProblemByID(problemID, userID string) (Problem, error) {
+	var problem Problem
+	session := config.Get().Session.Clone()
+	defer session.Close()
+
+	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
+	err := collection.Find(bson.M{"id": bson.ObjectIdHex(problemID), "createdby": bson.IsObjectIdHex(userID)}).One(&problem)
 	return problem, err
 }
 
@@ -166,13 +178,15 @@ func Update(problemID string, update Problem) error {
 	return collection.Update(bson.M{"id": bson.ObjectIdHex(problemID)}, update)
 }
 
+//Remove - Remove
 func Remove(problemID string) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	return collection.RemoveId(problemID)
+	return collection.Remove(bson.M{"id": bson.ObjectIdHex(problemID)})
 }
 
+//ProblemExists - ProblemExists
 func ProblemExists(id string) bool {
 	session := config.Get().Session.Clone()
 	defer session.Close()

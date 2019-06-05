@@ -17,6 +17,8 @@ func Routes() *chi.Mux {
 	router.Post("/resolve", ResolveProblem)
 	router.Get("/user/{user_id}", GetUserProblems)
 	router.Get("/{problem_id}", GetProblem)
+	router.Put("/{problem_id}/{user_id}", UpdateMyPost)
+	router.Delete("/{problem_id}", DeleteMyPost)
 
 	return router
 }
