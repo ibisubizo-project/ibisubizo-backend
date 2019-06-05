@@ -30,7 +30,7 @@ func Create(problem Problem) error {
 	return collection.Insert(problem)
 }
 
-//List Problems
+//ListAll - ListAll
 func ListAll(page int) ([]Problem, error) {
 	var problems []Problem
 	session := config.Get().Session.Clone()
