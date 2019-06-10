@@ -25,8 +25,10 @@ type ApproveRequest struct {
 
 //UpdateMyPost - UpdateMyPost
 func UpdateMyPost(w http.ResponseWriter, r *http.Request) {
-	userID := chi.URLParam(r, "user_id")
+	//userID := chi.URLParam(r, "user_id")
 	problemID := chi.URLParam(r, "problem_id")
+
+	log.Println("ProblemID ", problemID)
 	var requestBody Problem
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
@@ -35,16 +37,26 @@ func UpdateMyPost(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, MessageResponse{Message: "Invalid Payload"})
 		return
 	}
-	_, err = GetUsersProblemByID(problemID, userID)
+
+	log.Println(requestBody)
+
+	problem, err := GetByID(problemID)
 	if err != nil {
-		log.Println("No problem with the specified ID and userID")
+		log.Println(err)
+		log.Println("Unable to Get Problem with the ID specified...")
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, MessageResponse{Message: "No problem with the specified ID and userID"})
+		render.JSON(w, r, MessageResponse{Message: "Error retrieving problem with specified ID"})
 		return
 	}
-	err = Update(problemID, requestBody)
+
+	problem.Text = requestBody.Text
+	problem.Title = requestBody.Title
+	problem.UpdatedAt = time.Now()
+
+	err = Update(problemID, problem)
 	if err != nil {
 		log.Println("Something went wrong while Updating Record")
+		log.Println(err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, MessageResponse{Message: "Something went wrong while Updating Record"})
 		return
@@ -225,6 +237,8 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("After Decoding...")
+
 	//Check if a problem with the ID Exists
 	if !ProblemExists(request.ProblemID) {
 		log.Println("[ApprovePost] There is no post with the specified ID")
@@ -232,6 +246,7 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, MessageResponse{Message: "There is no post with the specified ID"})
 		return
 	}
+	log.Println("After ProblemExists...")
 
 	problem, err := GetByID(request.ProblemID)
 	if err != nil {
@@ -242,6 +257,7 @@ func ApprovePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	problem.IsApproved = true
+	problem.UpdatedAt = time.Now()
 	err = Update(request.ProblemID, problem)
 	if err != nil {
 		log.Println(err)

@@ -1,6 +1,7 @@
 package problems
 
 import (
+	"log"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
@@ -8,7 +9,7 @@ import (
 )
 
 type Problem struct {
-	ID         bson.ObjectId `json:"_id,omitempty"`
+	ID         bson.ObjectId `json:"_id"`
 	Title      string        `json:"title"`
 	Text       string        `json:"text"`
 	Pictures   []string      `json:"pictures"`
@@ -149,7 +150,7 @@ func GetUsersProblemByID(problemID, userID string) (Problem, error) {
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	err := collection.Find(bson.M{"id": bson.ObjectIdHex(problemID), "createdby": bson.IsObjectIdHex(userID)}).One(&problem)
+	err := collection.Find(bson.M{"id": bson.ObjectIdHex(problemID)}).One(&problem)
 	return problem, err
 }
 
@@ -169,13 +170,15 @@ func GetUserListings(userID string, page int) ([]Problem, error) {
 	return problems, err
 }
 
-//Edit a problem by the user that created it
+//Update - Edit a problem by the user that created it
 func Update(problemID string, update Problem) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()
-
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
+	log.Println("Problem ID: ", problemID)
 	return collection.Update(bson.M{"id": bson.ObjectIdHex(problemID)}, update)
+	// updatedDocument := bson.D{{Name: "$set", Value: bson.D{{Name: "text", Value: update.Text}, {Name: "title", Value: update.Title}, {Name: "updatedat", Value: time.Now()}}}}
+	// return collection.UpdateId(bson.M{"id": problemID}, updatedDocument)
 }
 
 //Remove - Remove
