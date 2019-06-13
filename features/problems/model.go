@@ -1,7 +1,6 @@
 package problems
 
 import (
-	"log"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
@@ -170,15 +169,35 @@ func GetUserListings(userID string, page int) ([]Problem, error) {
 	return problems, err
 }
 
+//GetProblemStatus - GetProblemStatus
+func GetProblemStatus(problemID string) string {
+	var problem Problem
+	session := config.Get().Session.Clone()
+	defer session.Close()
+
+	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
+	err := collection.Find(bson.M{"id": bson.ObjectIdHex(problemID)}).One(&problem)
+	if err == nil {
+		status := ""
+		switch problem.Status {
+		case 0: //Public
+			status = "public"
+			break
+		case 1:
+			status = "private"
+			break
+		}
+		return status
+	}
+	return ""
+}
+
 //Update - Edit a problem by the user that created it
 func Update(problemID string, update Problem) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.PROBLEMSCOLLECTION)
-	log.Println("Problem ID: ", problemID)
 	return collection.Update(bson.M{"id": bson.ObjectIdHex(problemID)}, update)
-	// updatedDocument := bson.D{{Name: "$set", Value: bson.D{{Name: "text", Value: update.Text}, {Name: "title", Value: update.Title}, {Name: "updatedat", Value: time.Now()}}}}
-	// return collection.UpdateId(bson.M{"id": problemID}, updatedDocument)
 }
 
 //Remove - Remove
