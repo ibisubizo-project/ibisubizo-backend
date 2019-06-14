@@ -17,6 +17,7 @@ const (
 	PROBLEMSCOLLECTION     = "problems"
 	COMMENTLIKESCOLLECTION = "commentlikes"
 	PROBLEMLIKESCOLLECTION = "problemlikes"
+	METRICSCOLLECTION      = "metrics"
 	LIMITS                 = 6
 )
 
