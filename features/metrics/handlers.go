@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ofonimefrancis/problemsApp/features/problems"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 )
@@ -115,39 +117,28 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 
 //TrendingProblems - TrendingProblems
 func TrendingProblems(w http.ResponseWriter, r *http.Request) {
-	metrics, err := GetAllMetrics()
+	now := time.Now()
+	currentMonth := int(now.Month())
+	metrics, err := GetMonthlyMetrics(currentMonth, now.Year())
 	if err != nil {
+		log.Println("Error retrieving trending problems")
 		log.Println(err)
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, MessageResponse{Message: "Error retrieving metrics"})
+		render.JSON(w, r, MessageResponse{Message: "Error retrieving trending problems"})
 		return
 	}
 
-	currentYear := time.Now()
-	currentMonth := currentYear.Month().String()
-	thisMonthMetrics := []Metrics{}
-	setOfProblems := make(map[string]struct{})
+	trendingProblems := []problems.Problem{}
+
 	for _, metric := range metrics {
-		t, err := time.Parse("2019-06-14T10:53:45.136Z", metric.CreatedAt.String())
+		problem, err := problems.GetByID(metric.ProblemID)
 		if err != nil {
-			log.Println("Invalid Time Format In the database...")
 			continue
 		}
-
-		if t.Month().String() == currentMonth && t.Year() == currentYear.Year() {
-			thisMonthMetrics = append(thisMonthMetrics, metric)
-		}
+		trendingProblems = append(trendingProblems, problem)
 	}
 
-	for _, metric := range thisMonthMetrics {
-		if _, ok := setOfProblems[metric.ProblemID]; ok {
-			continue
-		} else {
-			setOfProblems[metric.ProblemID] = struct{}{}
-		}
-	}
-
-	// for key := range setOfProblems {
-	// 	//
-	// }
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, trendingProblems)
+	return
 }

@@ -1,12 +1,13 @@
 package metrics
 
 import (
-	"log"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/ofonimefrancis/problemsApp/config"
 )
+
+const TRENDING_COUNT = 5
 
 //Metrics - Keeps track of Site visits
 type Metrics struct {
@@ -74,11 +75,14 @@ func GetMonthlyMetrics(month, year int) ([]Metrics, error) {
 	defer session.Close()
 
 	var metrics []Metrics
+	var metric Metrics
 	collection := session.DB(config.DATABASE).C(config.METRICSCOLLECTION)
-	err := collection.Find(bson.M{"month": month, "year": year}).All(&metrics)
-	if err != nil {
-		log.Println(err)
-		return []Metrics{}, err
+	iterator := collection.Find(bson.M{"month": month, "year": year, "visits": bson.M{"$gt": TRENDING_COUNT}}).Iter()
+	for iterator.Next(&metric) {
+		metrics = append(metrics, metric)
+	}
+	if len(metrics) == 0 {
+		metrics = []Metrics{}
 	}
 	return metrics, nil
 }

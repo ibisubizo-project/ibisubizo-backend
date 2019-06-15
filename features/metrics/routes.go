@@ -15,5 +15,6 @@ func Routes() *chi.Mux {
 	router.Get(ProblemMetricsRoute, GetProblemMetrics)
 	router.Post(AddMetricsRoute, NewMetrics)
 	router.Put("/{problemId}", UpdateMetrics)
+	router.Get("/trendings", TrendingProblems)
 	return router
 }
