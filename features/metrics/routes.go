@@ -14,5 +14,6 @@ func Routes() *chi.Mux {
 	router := chi.NewMux()
 	router.Get(ProblemMetricsRoute, GetProblemMetrics)
 	router.Post(AddMetricsRoute, NewMetrics)
+	router.Put("/{problemId}", UpdateMetrics)
 	return router
 }

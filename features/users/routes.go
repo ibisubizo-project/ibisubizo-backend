@@ -8,13 +8,14 @@ import (
 
 const (
 	//RegisterRoute - Register route
-	RegisterRoute = "/register"
-	LoginRoute    = "/login"
-	UserRoute     = "/{user_id}"
-	AllUsersRoute = "/"
+	RegisterRoute   = "/register"
+	LoginRoute      = "/login"
+	AdminLoginRoute = "/admin/login"
+	UserRoute       = "/{user_id}"
+	AllUsersRoute   = "/"
 )
 
-//Routes -  All the user specific routes
+//AuthRoutes -  All the Authentication specific routes
 func AuthRoutes() *chi.Mux {
 	router := chi.NewMux()
 
@@ -26,6 +27,7 @@ func AuthRoutes() *chi.Mux {
 		r.Use(jwtauth.Authenticator)
 
 		router.Post(LoginRoute, Login)
+		router.Post(AdminLoginRoute, AdminLogin)
 	})
 
 	return router

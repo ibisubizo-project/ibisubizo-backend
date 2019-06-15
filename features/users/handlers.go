@@ -151,6 +151,67 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
 }
 
+func AdminLogin(w http.ResponseWriter, r *http.Request) {
+	var loginRequest LoginObject
+
+	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+		log.Println("[Login] Error decoding payload")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something went wrong..."})
+		return
+	}
+
+	if !UserExists(loginRequest.PhoneNumber) {
+		log.Println("[Login] User doesn't exist")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid Phone number or password"})
+		return
+	}
+
+	user, err := Read(loginRequest.PhoneNumber)
+	if err != nil {
+		log.Println("[Login] Error retrieving user")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something went wrong..."})
+		return
+	}
+	if !user.IsAdmin {
+		log.Println("User is not an admin")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Please Login as an admin"})
+		return
+	}
+
+	if !VerifyPassword(loginRequest.Password, user.HashedPassword, user.Salt) {
+		//Invalid Password
+		log.Println("[Login] Invalid Password")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid PhoneNumber or Password"})
+		return
+	}
+
+	jwtAuth := config.GetTokenAuth()
+	_, tokenString, err := jwtAuth.Encode(jwt.MapClaims{
+		"id":        user.ID,
+		"isAdmin":   user.IsAdmin,
+		"firstname": user.FirstName,
+		"lastname":  user.LastName,
+		"phone":     user.PhoneNumber,
+	})
+	if err != nil {
+		log.Println("[Login] Error Encoding JWT payload")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something went wrong..."})
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
+}
+
 //FetchUserByID - FetchUserByID
 func FetchUserByID(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "user_id")
