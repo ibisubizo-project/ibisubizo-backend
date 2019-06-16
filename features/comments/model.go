@@ -8,13 +8,14 @@ import (
 )
 
 type Comment struct {
-	ID          bson.ObjectId `json:"_id,omitempty"`
-	PostID      bson.ObjectId `json:"post_id"`
-	UserID      bson.ObjectId `json:"user_id"`
-	Comment     string        `json:"comment"`
-	IsApproved  bool          `json:"is_approved"`
-	Images      []string      `json:"images,omitempty"`
-	CommentedAt time.Time     `json:"commented_at"`
+	ID             bson.ObjectId `json:"_id,omitempty"`
+	PostID         bson.ObjectId `json:"post_id"`
+	UserID         bson.ObjectId `json:"user_id"`
+	Comment        string        `json:"comment"`
+	IsApproved     bool          `json:"is_approved"`
+	IsAdminComment bool          `json:"is_admin"`
+	Images         []string      `json:"images,omitempty"`
+	CommentedAt    time.Time     `json:"commented_at"`
 }
 
 //CreateComment - CreateComment

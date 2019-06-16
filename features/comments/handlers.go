@@ -9,6 +9,7 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/ofonimefrancis/problemsApp/features/problems"
+	"github.com/ofonimefrancis/problemsApp/features/users"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -113,6 +114,15 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 	comment.CommentedAt = time.Now()
 	comment.IsApproved = false
 
+	user, err := users.GetUserById(comment.UserID.Hex())
+	if err != nil {
+		log.Println(err)
+		log.Println("Error Retrieving user that commented")
+	}
+	if user.IsAdmin {
+		comment.IsAdminComment = true
+		comment.IsApproved = true
+	}
 	if err := CreateComment(comment); err != nil {
 		log.Println("[AddComment] Error adding a new comment")
 		log.Println(err)
