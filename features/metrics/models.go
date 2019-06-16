@@ -77,7 +77,7 @@ func GetMonthlyMetrics(month, year int) ([]Metrics, error) {
 	var metrics []Metrics
 	var metric Metrics
 	collection := session.DB(config.DATABASE).C(config.METRICSCOLLECTION)
-	iterator := collection.Find(bson.M{"month": month, "year": year, "visits": bson.M{"$gt": TRENDING_COUNT}}).Iter()
+	iterator := collection.Find(bson.M{"month": month, "year": year, "visits": bson.M{"$gt": TRENDING_COUNT}}).Sort("-visits").Iter()
 	for iterator.Next(&metric) {
 		metrics = append(metrics, metric)
 	}
