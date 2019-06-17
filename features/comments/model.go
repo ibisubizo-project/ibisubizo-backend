@@ -5,6 +5,7 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/ofonimefrancis/problemsApp/config"
+	"github.com/ofonimefrancis/problemsApp/features/users"
 )
 
 type Comment struct {
@@ -16,12 +17,15 @@ type Comment struct {
 	IsAdminComment bool          `json:"is_admin"`
 	Images         []string      `json:"images,omitempty"`
 	CommentedAt    time.Time     `json:"commented_at"`
+	CommentedBy    users.Users   `json:"commentedby,omitempty"`
 }
 
 //CreateComment - CreateComment
 func CreateComment(comment Comment) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()
+	user, _ := users.GetUserById(comment.UserID.Hex())
+	comment.CommentedBy = user
 
 	collection := session.DB(config.DATABASE).C(config.COMMENTSCOLLECTION)
 	return collection.Insert(comment)
@@ -45,7 +49,7 @@ func GetAllUnapproved() ([]Comment, error) {
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.COMMENTSCOLLECTION)
-	err := collection.Find(bson.M{"isapproved": false}).All(&comments)
+	err := collection.Find(bson.M{"isapproved": false}).Sort("-commentedat").All(&comments)
 	return comments, err
 }
 
@@ -67,7 +71,8 @@ func GetCommentsByUser(postId, userId string) ([]Comment, error) {
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.COMMENTSCOLLECTION)
-	err := collection.Find(bson.M{"postid": bson.ObjectIdHex(postId), "userid": bson.ObjectIdHex(userId)}).All(&comment)
+	//Find Comments by User, or those that has been approved
+	err := collection.Find(bson.M{"$or": []bson.M{bson.M{"postid": bson.ObjectIdHex(postId), "userid": bson.ObjectIdHex(userId)}, bson.M{"isapproved": true}}}).Sort("-commentedat").All(&comment)
 	return comment, err
 }
 
