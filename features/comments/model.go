@@ -67,7 +67,7 @@ func GetCommentsByUser(postId, userId string) ([]Comment, error) {
 	defer session.Close()
 
 	collection := session.DB(config.DATABASE).C(config.COMMENTSCOLLECTION)
-	err := collection.Find(bson.M{"postid": postId, "userid": userId}).One(&comment)
+	err := collection.Find(bson.M{"postid": bson.ObjectIdHex(postId), "userid": bson.ObjectIdHex(userId)}).One(&comment)
 	return comment, err
 }
 
