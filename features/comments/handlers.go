@@ -98,6 +98,40 @@ func GetAllCommentsForPost(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+//GetAllCommentsByUser - GetAllCommentsByUser
+func GetAllCommentsByUser(w http.ResponseWriter, r *http.Request) {
+	postID := strings.TrimSpace(chi.URLParam(r, "postId"))
+	userID := strings.TrimSpace(chi.URLParam(r, "userId"))
+
+	user, err := users.GetUserById(userID)
+	if err != nil {
+		log.Println(err)
+		log.Println("Error retrieving User...")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "User not found"})
+		return
+	}
+	if !problems.ProblemExists(postID) {
+		log.Println("Problem doesn't exists")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: "Problem with the specified ID does not exist..."})
+		return
+	}
+	log.Println(user)
+
+	comments, err := GetCommentsByUser(postID, userID)
+	if err != nil {
+		log.Println(err)
+		log.Println("Error fetching comments by user")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, MessageResponse{Message: err.Error()})
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, comments)
+}
+
 //AddComment - AddComment
 func AddComment(w http.ResponseWriter, r *http.Request) {
 	var comment Comment

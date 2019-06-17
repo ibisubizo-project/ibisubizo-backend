@@ -11,6 +11,7 @@ func Routes() *chi.Mux {
 	router.Post("/{postId}", AddComment)
 	router.Get("/{postId}/public", GetCommentsForPublicPosts)
 	router.Get("/{postId}/all", GetAllCommentsForPost)
+	router.Get("/{postId}/{userId}/all", GetAllCommentsByUser)
 	router.Put("/{commentId}/approve", ApproveComment)
 	router.Get("/unapproved", GetAllUnapprovedComments)
 	router.Delete("/{commentId}", RemoveComment)

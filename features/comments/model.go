@@ -60,6 +60,17 @@ func GetComment(commentID string) (Comment, error) {
 	return comment, err
 }
 
+//GetCommentsByUser - GetCommentsByUser
+func GetCommentsByUser(postId, userId string) ([]Comment, error) {
+	var comment []Comment
+	session := config.Get().Session.Clone()
+	defer session.Close()
+
+	collection := session.DB(config.DATABASE).C(config.COMMENTSCOLLECTION)
+	err := collection.Find(bson.M{"postid": postId, "userid": userId}).One(&comment)
+	return comment, err
+}
+
 //CommentExists - CommentExists
 func CommentExists(id string) bool {
 	session := config.Get().Session.Clone()
