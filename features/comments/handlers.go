@@ -127,6 +127,9 @@ func GetAllCommentsByUser(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, MessageResponse{Message: err.Error()})
 		return
 	}
+	if len(comments) == 0 {
+		comments = []Comment{}
+	}
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, comments)
