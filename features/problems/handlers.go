@@ -51,6 +51,7 @@ func UpdateMyPost(w http.ResponseWriter, r *http.Request) {
 
 	problem.Text = requestBody.Text
 	problem.Title = requestBody.Title
+	problem.Status = requestBody.Status
 	problem.UpdatedAt = time.Now()
 
 	err = Update(problemID, problem)
@@ -378,20 +379,6 @@ func GetProblem(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, MessageResponse{Message: "Error retrieving problem"})
 		return
 	}
-
-	// var result ProblemDetail
-
-	// allComments, err := comments.GetCommentsForProblem(problem.ID)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	log.Println("Error retrieving comments")
-	// 	render.Status(r, http.StatusBadRequest)
-	// 	render.JSON(w, r, MessageResponse{Message: "Error retrieving comments"})
-	// 	return
-	// }
-
-	// result.Problem = problem
-	// result.Comments = allComments
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, problem)
