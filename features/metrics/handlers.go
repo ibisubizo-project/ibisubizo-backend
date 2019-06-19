@@ -55,6 +55,7 @@ func NewMetrics(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, MessageResponse{Message: "Invalid Payload"})
 		return
 	}
+	//TODO: Don't add the problem to the metrics collection if the problem is private
 	currentMonthString := time.Now().Month()
 	if err != nil {
 		log.Println(err)
@@ -132,9 +133,10 @@ func TrendingProblems(w http.ResponseWriter, r *http.Request) {
 
 	for _, metric := range metrics {
 		problem, err := problems.GetByID(metric.ProblemID)
-		if err != nil {
+		if err != nil || problem.Status == 1 {
 			continue
 		}
+
 		trendingProblems = append(trendingProblems, problem)
 	}
 
