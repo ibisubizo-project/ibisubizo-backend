@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,6 +18,8 @@ const (
 	PROBLEMLIKESCOLLECTION = "problemlikes"
 	METRICSCOLLECTION      = "metrics"
 	LIMITS                 = 6
+	DEFAULT_PORT           = "8000"
+	DEFAULT_DB_URL         = "127.0.0.1:27017"
 )
 
 var (
@@ -37,40 +38,27 @@ type Config struct {
 
 //Init Initializes the configuration struct
 func Init() {
-	log.Println("[INIT]")
 	config = Config{}
 	port := os.Getenv("IBUSIBUZO_PORT")
 	if len(port) == 0 {
-		log.Println("len(port) != 0")
-		config.Port = "8000"
+		config.Port = DEFAULT_PORT
 	} else {
-		log.Println("[len(port) != 0] else")
-		fmt.Println(port)
 		config.Port = port
 	}
 
 	databaseURL := os.Getenv("IBUSIBUZO_DATABASE_URL")
 	if len(databaseURL) == 0 {
-		log.Println("len(databaseURL) != 0")
-		config.MongoURL = "127.0.0.1:27017"
+		config.MongoURL = DEFAULT_DB_URL
 	} else {
-		log.Println("[len(databaseURL) != 0] else")
 		config.MongoURL = databaseURL
 	}
 
 	session, err := mgo.Dial(config.MongoURL)
-	// session, err := mgo.DialWithInfo(&mgo.DialInfo{
-	// 	Addrs:    config.MongoURL,
-	// 	Username: "",
-	// 	Password: "",
-	// })
-
 	if err != nil {
 		log.Println(err)
 		log.Panic("Error connecting to database")
 	}
 	config.Session = session
-
 }
 
 //Get Returns a config file
