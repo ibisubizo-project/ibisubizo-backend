@@ -16,6 +16,6 @@ RUN go get -d -v
 # build main.go
 RUN go build main.go
 # run the binary
-EXPOSE 80
+EXPOSE 80 8080 8000 8001
 
 CMD ["./main"]
