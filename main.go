@@ -40,8 +40,8 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	})
-	r.Use(cors.Handler)
 
+	r.Use(cors.Handler)
 	r.Mount("/api/auth", users.AuthRoutes())
 	r.Mount("/api/problems", problems.Routes())
 	r.Mount("/api/comments", comments.Routes())
