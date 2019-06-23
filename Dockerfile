@@ -1,21 +1,13 @@
-FROM golang:1.10
+FROM golang:alpine AS build
+RUN apk --no-cache add gcc g++ make git
+WORKDIR /go/src/app
+COPY . .
+RUN go get ./...
+RUN GOOS=linux go build -ldflags="-s -w" -o ./bin/web-app ./main.go
 
-# create a working directory
-WORKDIR /go/src/github.com/ofonimefrancis/problemsApp/
-
-# install packages
-
-# add source code
-ADD ./ /go/src/github.com/ofonimefrancis/problemsApp/
-
-
-RUN echo $GOPATH
-
-RUN go get -d -v
-
-# build main.go
-RUN go build main.go
-# run the binary
-EXPOSE 80 8080 8000 8001
-
-CMD ["./main"]
+FROM alpine:3.9
+RUN apk --no-cache add ca-certificates
+WORKDIR /usr/bin
+COPY --from=build /go/src/app/bin /go/bin
+EXPOSE 80
+ENTRYPOINT /go/bin/web-app --port 80
