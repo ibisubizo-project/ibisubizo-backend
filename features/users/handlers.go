@@ -231,6 +231,7 @@ func AdminLogin(w http.ResponseWriter, r *http.Request) {
 	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(loginRequest.Password)); err != nil {
 		//Invalid Password
 		log.Println("[Login] Invalid Password")
+		log.Println("[Bcrypt]")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, ErrorResponse{Error: "Invalid PhoneNumber or Password"})
 		return

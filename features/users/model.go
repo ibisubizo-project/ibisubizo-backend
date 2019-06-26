@@ -18,7 +18,6 @@ type Users struct {
 	IsAdmin        bool          `json:"is_admin"`
 	Password       string        `json:"password"`
 	HashedPassword []byte        `json:"hashed_password"`
-	Salt           []byte        `json:"salt"`
 	CreatedAt      time.Time     `json:"created_at"`
 	UpdatedAt      time.Time     `json:"updated_at"`
 }
