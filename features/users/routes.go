@@ -8,12 +8,15 @@ import (
 
 const (
 	//RegisterRoute - Register route
-	RegisterRoute     = "/register"
-	LoginRoute        = "/login"
-	AdminLoginRoute   = "/admin/login"
-	AdmiCreationRoute = "/admin/register"
-	UserRoute         = "/{user_id}"
-	AllUsersRoute     = "/"
+	RegisterRoute       = "/register"
+	LoginRoute          = "/login"
+	AdminLoginRoute     = "/admin/login"
+	AdmiCreationRoute   = "/admin/register"
+	UserRoute           = "/{user_id}"
+	ForgetPasswordRoute = "/forget"
+	AllUsersRoute       = "/"
+	ConfirmRestRoute    = "/confirmation/{reset_token}"
+	ChangePasswordRoute = "/changepassword"
 )
 
 //AuthRoutes -  All the Authentication specific routes
@@ -40,6 +43,9 @@ func UserRoutes() *chi.Mux {
 	router := chi.NewMux()
 	router.Get(AllUsersRoute, RetrieveAllUsers)
 	router.Get(UserRoute, FetchUserByID)
+	router.Post(ForgetPasswordRoute, ForgetPassword)
+	router.Post(ConfirmRestRoute, ConfirmResetToken)
+	router.Post(ChangePasswordRoute, ChangePassword)
 
 	return router
 }

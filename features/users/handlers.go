@@ -21,6 +21,11 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type ChangePasswordRequest struct {
+	Password string `json:"string"`
+	UserID   string `json:"user_id"`
+}
+
 //SuccessResponse - LoginSuccessResponse
 type SuccessResponse struct {
 	User        Users  `json:"user"`
@@ -359,4 +364,129 @@ func RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, users)
+}
+
+//ForgetPassword - First Stage of forget password
+func ForgetPassword(w http.ResponseWriter, r *http.Request) {
+	user := Users{}
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Println("[ForgetPassword] Error decoding payload")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid Payload"})
+		return
+	}
+	//get the phone in the request body
+	//Check if user with that phone exists
+	if !UserExists(user.PhoneNumber) {
+		log.Println("[ForgetPassword] Error decoding payload")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "User Not Found"})
+		return
+	}
+
+	randomDigits, _ := utils.GenerateRandomString(5)
+	randomToken, _ := utils.GenerateRandomString(35)
+	user.ResetCode = randomDigits
+	user.ResetToken = randomToken
+	fiveMinutes := time.Minute * time.Duration(5)
+	expiresIn := time.Now().Local().Add(fiveMinutes)
+	user.CodeExpiresAt = expiresIn
+
+	err = UpdateByID(user.ID, user)
+	if err != nil {
+		log.Println("[ForgetPassword] Error Updating User Information")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something Bad happened"})
+		return
+	}
+
+	//Send Reset Code and link to reset password
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, ErrorResponse{Error: "A Reset Code valid for 5 mins has been sent to your phone"})
+}
+
+func ConfirmResetToken(w http.ResponseWriter, r *http.Request) {
+	//https://api.ibisubizo.com/api/auth/{reset_token}
+	//RequestBody { 'reset_code'}
+	//Check if the reset_token and reset_code match a user
+	//Check if the reset_token and code hasn't expired
+	//If expired, tell them to resend the reset token (Create Reset token and code and adds it to the database)
+	//ElseReturn OK nd user can proceed to the next step
+
+	type ResetCodeParams struct {
+		ResetCode string `json:"reset_code"`
+	}
+
+	resetToken := chi.URLParam(r, "reset_token")
+	var resetCodeBody ResetCodeParams
+	err := json.NewDecoder(r.Body).Decode(&resetCodeBody)
+	if err != nil {
+		log.Println(err)
+		log.Println("[ConfirmResetToken] Invalid Payload")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid Payload"})
+		return
+	}
+
+	user, err := ConfirmResetTokens(resetToken, resetCodeBody.ResetCode)
+
+	if err != nil {
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: err.Error()})
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, struct {
+		Message string `json:"message"`
+		User    Users  `json:"user"`
+	}{Message: "Confirmation Successful", User: user})
+}
+
+//ChangePassword - ChangePassword
+func ChangePassword(w http.ResponseWriter, r *http.Request) {
+	var changePasswordBody ChangePasswordRequest
+	err := json.NewDecoder(r.Body).Decode(&changePasswordBody)
+	if err != nil {
+		log.Println(err)
+		log.Println("[ChangePassword] Invalid Payload")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid Payload"})
+		return
+	}
+
+	user, err := GetUserById(changePasswordBody.UserID)
+	if err != nil {
+		log.Println(err)
+		log.Println("[ChangePassword] Unable to retrieve User with specified ID")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "User with ID not found"})
+		return
+	}
+
+	passwordHash, err := utils.HashPassword(changePasswordBody.Password)
+	if err != nil {
+		log.Println(err)
+		log.Println("[ChangePassword] Error while hashing password")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something went wrong.."})
+		return
+	}
+	user.HashedPassword = passwordHash
+	user.UpdatedAt = time.Now()
+
+	if err = UpdateByID(user.ID, user); err != nil {
+		log.Println(err)
+		log.Println("[ChangePassword] Error while updating user password")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something went wrong.."})
+	}
+	render.Status(r, http.StatusOK)
+	//Send SMS, your new password has been updated
+	render.JSON(w, r, ErrorResponse{Error: "Password Successfully changed..."})
+
 }
