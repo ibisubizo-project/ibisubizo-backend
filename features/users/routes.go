@@ -8,11 +8,12 @@ import (
 
 const (
 	//RegisterRoute - Register route
-	RegisterRoute   = "/register"
-	LoginRoute      = "/login"
-	AdminLoginRoute = "/admin/login"
-	UserRoute       = "/{user_id}"
-	AllUsersRoute   = "/"
+	RegisterRoute     = "/register"
+	LoginRoute        = "/login"
+	AdminLoginRoute   = "/admin/login"
+	AdmiCreationRoute = "/admin/register"
+	UserRoute         = "/{user_id}"
+	AllUsersRoute     = "/"
 )
 
 //AuthRoutes -  All the Authentication specific routes
@@ -28,6 +29,7 @@ func AuthRoutes() *chi.Mux {
 
 		router.Post(LoginRoute, Login)
 		router.Post(AdminLoginRoute, AdminLogin)
+		router.Post(AdmiCreationRoute, CreateAdmin)
 	})
 
 	return router

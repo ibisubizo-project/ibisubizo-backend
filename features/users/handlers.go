@@ -27,6 +27,80 @@ type SuccessResponse struct {
 	TokenString string `json:"token"`
 }
 
+//CreateAdmin - Creates an Admin User
+func CreateAdmin(w http.ResponseWriter, r *http.Request) {
+	var user Users
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Something is not right..."})
+		return
+	}
+
+	if user.Exists() {
+		log.Println("[CreateAdmin] User exists..")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "User with phone already exists"})
+		return
+	}
+
+	passwordHash, err := utils.HashPassword(user.Password)
+	if err != nil {
+		log.Println("[CreateAdmin] Error creating password hash")
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	user.Password = "" //Dont disclose user password
+	user.HashedPassword = passwordHash
+
+	//Assign ID
+	user.ID = bson.NewObjectId()
+	user.IsAdmin = true
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
+
+	if err := Create(user); err != nil {
+		log.Println(err)
+		log.Println("[CreateAdmin] Error creating a new user")
+
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Error creating user"})
+		return
+	}
+
+	_, tokenString, err := config.GetTokenAuth().Encode(jwt.MapClaims{
+		"id":        user.ID,
+		"firstname": user.FirstName,
+		"lastname":  user.LastName,
+		"phone":     user.PhoneNumber,
+	})
+	if err != nil {
+		log.Println("[CreateAdmin] Error encoding jwt payload")
+		render.Status(r, http.StatusInternalServerError)
+		render.JSON(w, r, ErrorResponse{Error: "Error encoding jwt payload"})
+		return
+	}
+
+	expires := time.Now().AddDate(1, 0, 0)
+	ck := http.Cookie{
+		Name:     "jwt",
+		HttpOnly: false,
+		Path:     "/",
+		Expires:  expires,
+		Value:    tokenString,
+	}
+
+	// write the cookie to response
+	http.SetCookie(w, &ck)
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
+}
+
 //RegisterUser - Signs up a user to the platform
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var user Users
@@ -54,18 +128,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// passwordHash, err := NewPasswordHash(user.Password)
-	// if err != nil {
-	// 	log.Println("[RegisterUser] Error creating password hash")
-	// 	log.Println(err)
-	// 	render.Status(r, http.StatusBadRequest)
-	// 	render.JSON(w, r, ErrorResponse{Error: err.Error()})
-	// 	return
-	// }
-
 	user.Password = "" //Dont disclose user password
 	user.HashedPassword = passwordHash
-	//user.Salt = passwordHash.Salt
 
 	//Assign ID
 	user.ID = bson.NewObjectId()
@@ -145,23 +209,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//fmt.Printf("Password: %s\nHash: %s\nSalt: %s\n", loginRequest.Password, user.HashedPassword, user.Salt)
-
 	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(loginRequest.Password)); err != nil {
 		//Invalid Password
 		log.Println("[Login] Invalid Password")
+		log.Println("[Bcrypt]")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, ErrorResponse{Error: "Invalid PhoneNumber or Password"})
 		return
 	}
-
-	// if !VerifyPassword(loginRequest.Password, user.HashedPassword, user.Salt) {
-	// 	//Invalid Password
-	// 	log.Println("[Login] Invalid Password")
-	// 	render.Status(r, http.StatusBadRequest)
-	// 	render.JSON(w, r, ErrorResponse{Error: "Invalid PhoneNumber or Password"})
-	// 	return
-	// }
 
 	jwtAuth := config.GetTokenAuth()
 	_, tokenString, err := jwtAuth.Encode(jwt.MapClaims{
