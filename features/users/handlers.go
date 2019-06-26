@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"golang.org/x/crypto/bcrypt"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-chi/render"
 	"github.com/ofonimefrancis/problemsApp/config"
+	"github.com/ofonimefrancis/problemsApp/utils"
 )
 
 //ErrorResponse - ErrorResponse
@@ -43,7 +45,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passwordHash, err := NewPasswordHash(user.Password)
+	passwordHash, err := utils.HashPassword(user.Password)
 	if err != nil {
 		log.Println("[RegisterUser] Error creating password hash")
 		log.Println(err)
@@ -52,9 +54,18 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// passwordHash, err := NewPasswordHash(user.Password)
+	// if err != nil {
+	// 	log.Println("[RegisterUser] Error creating password hash")
+	// 	log.Println(err)
+	// 	render.Status(r, http.StatusBadRequest)
+	// 	render.JSON(w, r, ErrorResponse{Error: err.Error()})
+	// 	return
+	// }
+
 	user.Password = "" //Dont disclose user password
-	user.HashedPassword = passwordHash.Hash
-	user.Salt = passwordHash.Salt
+	user.HashedPassword = passwordHash
+	//user.Salt = passwordHash.Salt
 
 	//Assign ID
 	user.ID = bson.NewObjectId()
@@ -73,7 +84,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	_, tokenString, err := config.GetTokenAuth().Encode(jwt.MapClaims{
 		"id":        user.ID,
-		"isAdmin":   user.IsAdmin,
 		"firstname": user.FirstName,
 		"lastname":  user.LastName,
 		"phone":     user.PhoneNumber,
@@ -84,6 +94,18 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, ErrorResponse{Error: "Error encoding jwt payload"})
 		return
 	}
+
+	expires := time.Now().AddDate(1, 0, 0)
+	ck := http.Cookie{
+		Name:     "jwt",
+		HttpOnly: false,
+		Path:     "/",
+		Expires:  expires,
+		Value:    tokenString,
+	}
+
+	// write the cookie to response
+	http.SetCookie(w, &ck)
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
@@ -123,7 +145,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !VerifyPassword(loginRequest.Password, user.HashedPassword, user.Salt) {
+	//fmt.Printf("Password: %s\nHash: %s\nSalt: %s\n", loginRequest.Password, user.HashedPassword, user.Salt)
+
+	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(loginRequest.Password)); err != nil {
 		//Invalid Password
 		log.Println("[Login] Invalid Password")
 		render.Status(r, http.StatusBadRequest)
@@ -131,10 +155,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if !VerifyPassword(loginRequest.Password, user.HashedPassword, user.Salt) {
+	// 	//Invalid Password
+	// 	log.Println("[Login] Invalid Password")
+	// 	render.Status(r, http.StatusBadRequest)
+	// 	render.JSON(w, r, ErrorResponse{Error: "Invalid PhoneNumber or Password"})
+	// 	return
+	// }
+
 	jwtAuth := config.GetTokenAuth()
 	_, tokenString, err := jwtAuth.Encode(jwt.MapClaims{
 		"id":        user.ID,
-		"isAdmin":   user.IsAdmin,
 		"firstname": user.FirstName,
 		"lastname":  user.LastName,
 		"phone":     user.PhoneNumber,
@@ -147,10 +178,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	expires := time.Now().AddDate(1, 0, 0)
+	ck := http.Cookie{
+		Name:     "jwt",
+		HttpOnly: false,
+		Path:     "/",
+		Expires:  expires,
+		Value:    tokenString,
+	}
+
+	// write the cookie to response
+	http.SetCookie(w, &ck)
+
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
 }
 
+//AdminLogin - Login an admin user
 func AdminLogin(w http.ResponseWriter, r *http.Request) {
 	var loginRequest LoginObject
 
@@ -184,7 +228,7 @@ func AdminLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !VerifyPassword(loginRequest.Password, user.HashedPassword, user.Salt) {
+	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(loginRequest.Password)); err != nil {
 		//Invalid Password
 		log.Println("[Login] Invalid Password")
 		render.Status(r, http.StatusBadRequest)
@@ -195,7 +239,6 @@ func AdminLogin(w http.ResponseWriter, r *http.Request) {
 	jwtAuth := config.GetTokenAuth()
 	_, tokenString, err := jwtAuth.Encode(jwt.MapClaims{
 		"id":        user.ID,
-		"isAdmin":   user.IsAdmin,
 		"firstname": user.FirstName,
 		"lastname":  user.LastName,
 		"phone":     user.PhoneNumber,
@@ -207,6 +250,18 @@ func AdminLogin(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, ErrorResponse{Error: "Something went wrong..."})
 		return
 	}
+
+	expires := time.Now().AddDate(1, 0, 0)
+	ck := http.Cookie{
+		Name:     "jwt",
+		HttpOnly: false,
+		Path:     "/",
+		Expires:  expires,
+		Value:    tokenString,
+	}
+
+	// write the cookie to response
+	http.SetCookie(w, &ck)
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, SuccessResponse{User: user, TokenString: tokenString})
