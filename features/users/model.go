@@ -103,19 +103,19 @@ func ReadAll() ([]Users, error) {
 }
 
 //Update - Update
-func Update(oldUser, newUser interface{}) error {
+func Update(oldUser, newUser Users) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
-	return collection.Update(oldUser, newUser)
+	return collection.Update(bson.M{"id": oldUser.ID}, newUser)
 }
 
 //UpdateByID - UpdateByID
-func UpdateByID(userID bson.ObjectId, user Users) error {
+func UpdateByID(userID string, user Users) error {
 	session := config.Get().Session.Clone()
 	defer session.Close()
-	collection := session.DB(config.DATABASE).C(config.METRICSCOLLECTION)
-	return collection.UpdateId(userID, user)
+	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
+	return collection.Update(bson.M{"id": bson.ObjectIdHex(userID)}, user)
 }
 
 //Delete - Delete
@@ -127,6 +127,15 @@ func Delete(id string) error {
 	defer session.Close()
 	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
 	return collection.Remove(bson.M{"id": bson.ObjectIdHex(id)})
+}
+
+//UserWithTokenExists - UserWithTokenExists
+func UserWithTokenExists(userID, token string) bool {
+	session := config.Get().Session.Clone()
+	defer session.Close()
+	var user Users
+	collection := session.DB(config.DATABASE).C(config.USERCOLLECTION)
+	return collection.Find(bson.M{"id": bson.ObjectIdHex(userID), "resettoken": token}).One(&user) == nil
 }
 
 //ConfirmResetTokens - ConfirmResetTokens

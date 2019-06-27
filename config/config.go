@@ -20,6 +20,7 @@ const (
 	LIMITS                 = 6
 	DEFAULT_PORT           = "8000"
 	DEFAULT_DB_URL         = "127.0.0.1:27017"
+	APP_URL                = "https://www.ibisubizo.com"
 )
 
 var (

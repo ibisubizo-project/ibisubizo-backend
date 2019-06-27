@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -22,7 +23,7 @@ type ErrorResponse struct {
 }
 
 type ChangePasswordRequest struct {
-	Password string `json:"string"`
+	Password string `json:"password"`
 	UserID   string `json:"user_id"`
 }
 
@@ -386,16 +387,31 @@ func ForgetPassword(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, ErrorResponse{Error: "User Not Found"})
 		return
 	}
+	verifiedUser, err := Read(user.PhoneNumber)
+	if err != nil {
+		log.Println(err)
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "User Not Found"})
+		return
+	}
+	user = verifiedUser
 
 	randomDigits, _ := utils.GenerateRandomString(5)
 	randomToken, _ := utils.GenerateRandomString(35)
 	user.ResetCode = randomDigits
 	user.ResetToken = randomToken
+
+	user.UpdatedAt = time.Now()
 	fiveMinutes := time.Minute * time.Duration(5)
-	expiresIn := time.Now().Local().Add(fiveMinutes)
+	expiresIn := time.Now().Add(fiveMinutes)
+
+	fmt.Println("In five minutes will be ", expiresIn)
 	user.CodeExpiresAt = expiresIn
 
-	err = UpdateByID(user.ID, user)
+	log.Println(user)
+
+	log.Println("ObjectID ", verifiedUser.ID)
+	err = Update(verifiedUser, user)
 	if err != nil {
 		log.Println("[ForgetPassword] Error Updating User Information")
 		log.Println(err)
@@ -405,6 +421,9 @@ func ForgetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Send Reset Code and link to reset password
+	resetTokenURL := fmt.Sprintf("%s/auth/confirm/token/%s", config.APP_URL, user.ResetToken)
+	var message = fmt.Sprintf("Your reset code is %s\nVisit %s and enter the above code", user.ResetCode, resetTokenURL)
+	utils.SendSMS(verifiedUser.PhoneNumber, message, "Ibisubizo")
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, ErrorResponse{Error: "A Reset Code valid for 5 mins has been sent to your phone"})
 }
@@ -450,12 +469,22 @@ func ConfirmResetToken(w http.ResponseWriter, r *http.Request) {
 //ChangePassword - ChangePassword
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	var changePasswordBody ChangePasswordRequest
+	token := r.URL.Query().Get("token")
 	err := json.NewDecoder(r.Body).Decode(&changePasswordBody)
 	if err != nil {
 		log.Println(err)
 		log.Println("[ChangePassword] Invalid Payload")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, ErrorResponse{Error: "Invalid Payload"})
+		return
+	}
+
+	//Check If user with reset token and ID exists
+	if !UserWithTokenExists(changePasswordBody.UserID, token) {
+		log.Println(err)
+		log.Println("[ChangePassword] Invalid Token")
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrorResponse{Error: "Invalid Token"})
 		return
 	}
 
@@ -478,15 +507,20 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	user.HashedPassword = passwordHash
 	user.UpdatedAt = time.Now()
+	user.ResetCode = ""
+	user.ResetToken = ""
+	user.CodeExpiresAt = time.Time{}
 
-	if err = UpdateByID(user.ID, user); err != nil {
+	if err = UpdateByID(user.ID.Hex(), user); err != nil {
 		log.Println(err)
 		log.Println("[ChangePassword] Error while updating user password")
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, ErrorResponse{Error: "Something went wrong.."})
+		return
 	}
 	render.Status(r, http.StatusOK)
 	//Send SMS, your new password has been updated
 	render.JSON(w, r, ErrorResponse{Error: "Password Successfully changed..."})
+	return
 
 }
