@@ -25,7 +25,7 @@ func SendSMS(to, text, sender string) {
 	pindo_url := "http://api.pindo.io/v1/sms/"
 
 	var message = MessageBody{
-		To:     to,
+		To:     fmt.Sprintf("+25%s", to),
 		Text:   text,
 		Sender: "Ibisubizo",
 	}

@@ -8,5 +8,5 @@ services:
     environment:
       - IBUSIBUZO_DATABASE_URL=mongodb://opiumated:phoenix01@ds155916.mlab.com:55916/ibusizo
       - IBUSIBUZO_PORT=80
-      - VIRTUAL_HOST=api.ibisubizo.com
-      - LETSENCRYPT_HOST=api.ibisubizo.com
+      - VIRTUAL_HOST=app.ibisubizo.com
+      - LETSENCRYPT_HOST=app.ibisubizo.com
